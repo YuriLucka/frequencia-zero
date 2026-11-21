@@ -5,8 +5,8 @@
 // page and its code always come from the same build. The lines stay valid on the dev
 // server, where nothing is precached.
 // Clara's recordings (audio/clara/) are not cached: they stream when present.
-const BUILD = '869bc9dfe731';
-const ASSETS = ["assets/index-j0Rzz1dg.js"];
+const BUILD = '1eee00d69532';
+const ASSETS = ["assets/index-Cmc9Fq-N.js"];
 const CACHE = 'fz-' + BUILD;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
