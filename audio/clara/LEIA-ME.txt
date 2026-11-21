@@ -1,0 +1,5 @@
+Gravações de Clara (opcional).
+1. Coloque aqui clara_01.mp3 … clara_06.mp3 (ou .ogg), com os ids de falas.js.
+2. Em falas.js, liste os ids em 'gravacoes' (ex.: gravacoes: ['clara_01']) ou use gravacoes: 'todas'.
+Arquivo listado e presente: o jogo toca a voz e mantém a legenda. Listado e ausente: volta ao texto (o navegador registra um 404 no console).
+Via file:// a voz toca sem o filtro de rádio (o navegador silencia áudio filtrado de arquivos locais); servida por http ela passa pelo filtro.
