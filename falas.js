@@ -9,6 +9,8 @@
 window.FALAS = {
   titulo: 'FREQUÊNCIA ZERO',
   comecar: 'Toque para começar',
+  continuar_jogo: 'Continuar',
+  novo_jogo: 'Novo plantão',
   controles: ['Arraste para olhar em volta', 'Toque num objeto para usar', 'Use fone de ouvido'],
   pausado: 'Pausado',
   continuar: 'Toque para continuar',

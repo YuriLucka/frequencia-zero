@@ -7,6 +7,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Frequência Zero — O Plantão</title>
+<script>
+  // The manifest only when served: a file:// page would log a CORS error fetching it.
+  if (location.protocol.startsWith('http')) { const l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l); }
+</script>
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#05070a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Freq. Zero">
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; touch-action: none;
     user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
@@ -573,8 +584,47 @@ function reset() {
   taps.length = 0; ptr.dx = ptr.dy = 0;
   for (const id in vozes) { vozes[id].el.pause(); }
 }
-function progress() { state.lastProgress = state.t; }
-function setStep(s) { state.step = s; progress(); events.push({ type: 'step', step: s, t: state.t }); }
+function progress() { state.lastProgress = state.t; saveCheckpoint(); }
+function setStep(s) { state.step = s; progress(); saveCheckpoint(true); events.push({ type: 'step', step: s, t: state.t }); }
+
+// ---- Progress saved on this device, by checkpoint (a step of the story) ------------------
+// Not the exact instant: a return lands at the start of the last step reached, so a line of
+// Clara or the silence before the alarm is never cut in half.
+const SAVE_KEY = 'fz-plantao-save-v1';
+const SAVE_FIELDS = ['step', 't', 'clipSeen', 'seen', 'camsDone', 'radioDone', 'hasPen', 'logChoice', 'clockOff', 'flashlight', 'choice', 'hints', 'thoughtsShown'];
+let lastSaveT = -10, titleSave = null;
+/** Writes the checkpoint; throttled to one write every 2 s unless forced (a new step). */
+function saveCheckpoint(force) {
+  if (scene !== 'play' || !state || state.step === 'fim') return;
+  if (!force && state.t - lastSaveT < 2) return;
+  lastSaveT = state.t;
+  try { const o = { v: 1 }; for (const k of SAVE_FIELDS) o[k] = state[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(o)); } catch (e) { /* private mode: play without saving */ }
+}
+function readSave() {
+  try { const o = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return o && o.v === 1 && STEPS.includes(o.step) && o.step !== 'fim' ? o : null; }
+  catch (e) { return null; }
+}
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* nothing saved */ } }
+/** Puts the game back at the start of the saved step, in a state that step can be played from. */
+function loadCheckpoint(o) {
+  const S = state;
+  for (const k of SAVE_FIELDS) if (k !== 'step' && o[k] !== undefined) S[k] = o[k];
+  S.hints = S.hints || {}; S.thoughtsShown = S.thoughtsShown || [];
+  S.lastProgress = S.t; S.nextFlash = S.t + 6; lastSaveT = S.t;
+  switch (o.step) {
+    case 'tarefas': S.step = 'tarefas'; if (S.logChoice >= 0) S.logAt = S.t; S.flashlight = false; break;
+    case 'apagao': S.step = 'apagao'; S.power = false; break;
+    case 'corredor': S.step = 'corredor'; S.power = false; S.flashlight = true; S.place = 'corredor'; break;
+    case 'volta': S.step = 'volta'; S.power = false; S.flashlight = true; S.place = 'corredor'; S.breaker = true; S.doorAjar = true; break;
+    case 'sinal': case 'conversa': case 'silencio': // back at the desk; the "0" is waiting on the dial
+      S.step = 'sinal'; S.breaker = true; S.doorAjar = true; S.flashlight = false; S.zeroOn = true; S.signalAt = S.t; S.choice = -1; break;
+    default: // 'alarme', 'gancho': the alarm rings again, the figure waits on CAM 03
+      S.step = 'alarme'; S.breaker = true; S.doorAjar = true; S.flashlight = false; S.zeroOn = true; S.locked = true; S.freq = tune.zero_mark;
+      S.clara = 4; S.claraAt = S.t - 20; S.claraDoneAt = S.t - 10; S.alarm = true; S.alarmBeepAt = S.t; break;
+  }
+}
+function newGame() { clearSave(); startAudio(); reset(); scene = 'play'; events.push({ type: 'start' }); }
+function continueGame(o) { startAudio(); reset(); loadCheckpoint(o); scene = 'play'; events.push({ type: 'continue', step: state.step }); }
 function think(key) {
   state.thought = { text: FALAS.pensamentos[key], at: state.t };
   if (!state.thoughtsShown.includes(key)) state.thoughtsShown.push(key);
@@ -757,7 +807,7 @@ function act(cx, cy) {
 }
 
 // ---- HUD hit areas (logical px) ----
-const ui = { opts: [], pause: null, mute: null, restart: null };
+const ui = { opts: [], pause: null, mute: null, restart: null, cont: null, novo: null };
 const inRect = (r, x, y) => r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
 
 /** One simulation step of the prologue. */
@@ -876,7 +926,7 @@ function advance(dt) {
     }
     case 'fim':
       S.fade = clamp((S.t - S.endAt) / 2, 0, 1);
-      if (S.fade >= 1) { S.done = true; S.gained = FALAS.continua; scene = 'results'; events.push({ type: 'end' }); }
+      if (S.fade >= 1) { S.done = true; S.gained = FALAS.continua; clearSave(); scene = 'results'; events.push({ type: 'end' }); }
       break;
   }
   if (S.step === 'conversa' && S.clara >= 1 && S.claraDoneAt < 0) { const c = claraNow(); if (c && c.done) S.claraDoneAt = S.t; }
@@ -1188,7 +1238,17 @@ const scenes = {
   },
   title: {
     update() {
-      if (taps.length || pressed('Enter') || pressed('Space')) { taps.length = 0; startAudio(); reset(); scene = 'play'; events.push({ type: 'start' }); }
+      const sv = titleSave;
+      for (const tp of taps) {
+        const lx = tp.x / K, ly = tp.y / K;
+        if (!sv) { newGame(); break; }
+        if (inRect(ui.cont, lx, ly)) { continueGame(sv); break; }
+        if (inRect(ui.novo, lx, ly)) { newGame(); break; }
+      }
+      taps.length = 0;
+      if (scene !== 'title') return;
+      if (pressed('Enter') || pressed('Space')) sv ? continueGame(sv) : newGame();
+      else if (pressed('KeyN')) newGame();
     },
     draw(vt) {
       render3D(vt); ctx.clearRect(0, 0, W, H);
@@ -1197,7 +1257,15 @@ const scenes = {
       text(FALAS.titulo, W / 2 + j, H * 0.36, Math.min(96, W / 10), '#dfe8e4', 'center', 'bold ');
       if (vr() < 0.1) text(FALAS.titulo, W / 2 + j + 4, H * 0.36 + 2, Math.min(96, W / 10), 'rgba(120,200,170,.35)', 'center', 'bold ');
       CONTROLS.forEach((c, i) => text(c, W / 2, H * 0.56 + i * 38, 24, '#8fa09a'));
-      if (Math.floor(vt * 1.4) % 2) text(FALAS.comecar, W / 2, H * 0.84, 30, '#e8f0ec');
+      if (titleSave) { // a saved shift: continue it, or start a new one
+        const w = Math.min(W - 80, 420), h = 64, x = (W - w) / 2;
+        ui.cont = { x, y: H * 0.76, w, h }; ui.novo = { x, y: H * 0.76 + h + 18, w, h };
+        ctx.fillStyle = 'rgba(10,22,18,.85)'; ctx.fillRect(x, ui.cont.y, w, h);
+        ctx.strokeStyle = '#9fd4b4'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, ui.cont.y + 1, w - 2, h - 2);
+        text(FALAS.continuar_jogo, W / 2, ui.cont.y + h / 2, 30, '#e8f0ec');
+        ctx.strokeStyle = 'rgba(160,190,180,.45)'; ctx.strokeRect(x + 1, ui.novo.y + 1, w - 2, h - 2);
+        text(FALAS.novo_jogo, W / 2, ui.novo.y + h / 2, 26, '#9fb0aa');
+      } else if (Math.floor(vt * 1.4) % 2) text(FALAS.comecar, W / 2, H * 0.84, 30, '#e8f0ec');
     },
   },
   play: {
@@ -1218,9 +1286,9 @@ const scenes = {
   },
   results: {
     update() {
-      for (const tp of taps) if (inRect(ui.restart, tp.x / K, tp.y / K)) { scene = 'title'; reset(); }
+      for (const tp of taps) if (inRect(ui.restart, tp.x / K, tp.y / K)) { scene = 'title'; reset(); titleSave = readSave(); }
       taps.length = 0;
-      if (pressed('Enter') || pressed('KeyR')) { scene = 'title'; reset(); }
+      if (pressed('Enter') || pressed('KeyR')) { scene = 'title'; reset(); titleSave = readSave(); }
     },
     draw(vt) {
       soundSync(); ctx.clearRect(0, 0, W, H); clear('#000'); staticOverlay(0.06, 160);
@@ -1281,12 +1349,15 @@ window.game = {
 try { gfx = buildWorld(); } catch (e) { gfx = null; console.warn('WebGL indisponível: ' + e.message); }
 addEventListener('resize', fit); fit();
 prepararVozes();
+titleSave = readSave();
 reset();
 scene = params.get('scene') || 'title';
 if (!scenes[scene]) scene = 'title';
 last = clock.now();
 if (params.get('manual') === '1') drawFrame();
 else { requestAnimationFrame(frame); setInterval(timer, 50); }
+// Installable and offline when served (GitHub Pages); a double-clicked file:// page just plays.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>
