@@ -5,8 +5,8 @@
 // page and its code always come from the same build. The lines stay valid on the dev
 // server, where nothing is precached.
 // The recorded voices (audio/) are in ASSETS too, so the installed game speaks offline.
-const BUILD = '956efdb2493f';
-const ASSETS = ["assets/index-CTTDJdU2.js","audio/boletim.mp3","audio/clara/c2_clara_01.mp3","audio/clara/c2_clara_02.mp3","audio/clara/c2_clara_03.mp3","audio/clara/c2_clara_04.mp3","audio/clara/c2_clara_06.mp3","audio/clara/c3_clara_01.mp3","audio/clara/c3_clara_02.mp3","audio/clara/c3_clara_03.mp3","audio/clara/c3_clara_04.mp3","audio/clara/c3_clara_05.mp3","audio/clara/c3_clara_06.mp3","audio/clara/c4_clara_01.mp3","audio/clara/c4_clara_02.mp3","audio/clara/c4_clara_03.mp3","audio/clara/c4_clara_04.mp3","audio/clara/c5_clara_01.mp3","audio/clara/c5_clara_02.mp3","audio/clara/c5_clara_03.mp3","audio/clara/c5_clara_04.mp3","audio/clara/clara_01.mp3","audio/clara/clara_02.mp3","audio/clara/clara_03.mp3","audio/clara/clara_04.mp3","audio/clara/clara_05.mp3","audio/clara/clara_06.mp3"];
+const BUILD = '00107ad3d9e8';
+const ASSETS = ["assets/index-x_vNnG8B.js","audio/boletim.mp3","audio/clara/c2_clara_01.mp3","audio/clara/c2_clara_02.mp3","audio/clara/c2_clara_03.mp3","audio/clara/c2_clara_04.mp3","audio/clara/c2_clara_06.mp3","audio/clara/c3_clara_01.mp3","audio/clara/c3_clara_02.mp3","audio/clara/c3_clara_03.mp3","audio/clara/c3_clara_04.mp3","audio/clara/c3_clara_05.mp3","audio/clara/c3_clara_06.mp3","audio/clara/c4_clara_01.mp3","audio/clara/c4_clara_02.mp3","audio/clara/c4_clara_03.mp3","audio/clara/c4_clara_04.mp3","audio/clara/c5_clara_01.mp3","audio/clara/c5_clara_02.mp3","audio/clara/c5_clara_03.mp3","audio/clara/c5_clara_04.mp3","audio/clara/clara_01.mp3","audio/clara/clara_02.mp3","audio/clara/clara_03.mp3","audio/clara/clara_04.mp3","audio/clara/clara_05.mp3","audio/clara/clara_06.mp3"];
 const CACHE = 'fz-' + BUILD;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
