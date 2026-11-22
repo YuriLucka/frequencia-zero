@@ -5,8 +5,8 @@
 // page and its code always come from the same build. The lines stay valid on the dev
 // server, where nothing is precached.
 // The recorded voices (audio/) are in ASSETS too, so the installed game speaks offline.
-const BUILD = 'ce7885f94daa';
-const ASSETS = ["assets/index-DGggdAka.js","audio/boletim.mp3","audio/clara/c2_clara_01.mp3","audio/clara/c2_clara_02.mp3","audio/clara/c2_clara_03.mp3","audio/clara/c2_clara_04.mp3","audio/clara/c2_clara_06.mp3","audio/clara/clara_01.mp3","audio/clara/clara_02.mp3","audio/clara/clara_03.mp3","audio/clara/clara_04.mp3","audio/clara/clara_05.mp3","audio/clara/clara_06.mp3"];
+const BUILD = '863aafeb34c6';
+const ASSETS = ["assets/index-DhKlEqsa.js","audio/boletim.mp3","audio/clara/c2_clara_01.mp3","audio/clara/c2_clara_02.mp3","audio/clara/c2_clara_03.mp3","audio/clara/c2_clara_04.mp3","audio/clara/c2_clara_06.mp3","audio/clara/clara_01.mp3","audio/clara/clara_02.mp3","audio/clara/clara_03.mp3","audio/clara/clara_04.mp3","audio/clara/clara_05.mp3","audio/clara/clara_06.mp3"];
 const CACHE = 'fz-' + BUILD;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
